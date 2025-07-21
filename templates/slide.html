@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Slide - Product Spec PPT</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0eded;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.603);
+            padding: 32px 45px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.22);
+            width: 470px;
+            text-align: center;
+        }
+        h1 {
+            color: #d25a2f;
+            margin-top: 8px;
+        }
+        label {
+            font-weight: bold;
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 7px;
+            text-align: left;
+        }
+        .label-help-inline {
+            display: inline-block;
+            font-weight: bold;
+            font-size: 1rem;
+            margin-top: 15px;
+            margin-bottom: 7px;
+            text-align: left;
+        }
+        .circle-help {
+            background: none;
+            border: none;
+            padding: 0;
+            height: 20px;
+            width: 20px;
+            min-width: 20px;
+            border-radius: 65%;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            vertical-align: middle;
+            margin-left: 3px;
+        }
+        .circle-help svg {
+            height: 20px;
+            width: 20px;
+        }
+        input[type="text"], select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+        .erp-fields {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .erp-fields.wide {
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 8px 16px;
+            justify-content: flex-start;
+        }
+        .erp-group {
+            flex: 1 1 45%;
+            min-width: 44%;
+            max-width: 48%;
+            display: flex;
+            flex-direction: column;
+        }
+        @media (max-width: 700px) {
+            .container { width: 97vw; padding: 20px 6px; }
+            .erp-fields.wide .erp-group { min-width: 95vw; max-width: 100vw; }
+        }
+        .button-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: space-between;
+            margin-top: 35px;
+        }
+        button {
+            flex: 1 1 45%;
+            padding: 0.9em;
+            font-size: 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+        .download-ready {
+            background-color: #34b233 !important;
+            color: #fff !important;
+        }
+        .download-disabled {
+            background-color: #ccc !important;
+            color: #666 !important;
+            cursor: not-allowed !important;
+        }
+        button:not(.download-ready):not(.download-disabled) {
+            background-color: #d25a2f;
+            color: white;
+        }
+        .secondary {
+            background: #c7c7c7;
+            color: #333;
+        }
+        button:hover:not(.download-disabled):not(.secondary):not(.download-ready) {
+            background-color: #e66400;
+        }
+        button.download-ready:hover {
+            background-color: #269d1c !important;
+        }
+        .warn {
+            background: #ffefc9;
+            border: 1.5px solid #d25a2f;
+            color: #c06a00;
+            border-radius: 8px;
+            padding: 13px 15px;
+            margin: 16px 0 0 0;
+            font-size: 15px;
+            text-align: left;
+        }
+    </style>
+    <script>
+        const templates = {{ templates_per_count|tojson }};
+        let allowForceDownload = false;
+        let slideData = {{ slide_data|tojson if slide_data else 'null' }};
+        function updateTemplateOptions() {
+            const count = document.getElementById('product_count').value;
+            const templateSel = document.getElementById('template');
+            templateSel.innerHTML = "";
+            if (templates[count]) {
+                for (let i = 1; i <= templates[count]; i++) {
+                    const opt = document.createElement('option');
+                    opt.value = i;
+                    opt.text = `Template ${i}`;
+                    templateSel.appendChild(opt);
+                }
+                if (slideData && slideData['template']) {
+                    templateSel.value = slideData['template'];
+                }
+            }
+        }
+        // --- Render ERP code fields dynamically
+        function renderERPFields() {
+            const n = parseInt(document.getElementById('product_count').value || 1);
+            const erpFieldsDiv = document.getElementById('erp-fields');
+            erpFieldsDiv.innerHTML = "";
+            if (n < 5) {
+                erpFieldsDiv.classList.remove('wide');
+                for (let i = 1; i <= n; i++) {
+                    erpFieldsDiv.innerHTML += `
+                        <label id="code_label${i}">ERP Code #${i}</label>
+                        <input type="text" name="code${i}" id="code${i}" value="${slideData && slideData.codes && slideData.codes[i-1] ? slideData.codes[i-1] : ''}">
+                    `;
+                }
+            } else {
+                erpFieldsDiv.classList.add('wide');
+                for (let i = 1; i <= n; i++) {
+                    erpFieldsDiv.innerHTML += `
+                        <div class="erp-group">
+                            <label id="code_label${i}">ERP Code #${i}</label>
+                            <input type="text" name="code${i}" id="code${i}" value="${slideData && slideData.codes && slideData.codes[i-1] ? slideData.codes[i-1] : ''}">
+                        </div>
+                    `;
+                }
+            }
+            // Re-hook input events for validation
+            for (let i = 1; i <= n; i++) {
+                document.getElementById('code' + i).oninput = checkRequired;
+            }
+            checkRequired();
+        }
+        function checkRequired() {
+            const n = parseInt(document.getElementById('product_count').value || 1);
+            let ready = true;
+            if (!document.querySelector('input[name="page_title"]').value.trim()) ready = false;
+            for (let i = 1; i <= n; i++) {
+                if (!document.getElementById('code' + i).value.trim()) ready = false;
+            }
+            if (!document.getElementById('template').value) ready = false;
+            const finishBtn = document.getElementById('finishBtn');
+            if (ready) {
+                finishBtn.classList.remove('download-disabled');
+                finishBtn.classList.add('download-ready');
+                finishBtn.disabled = false;
+            } else {
+                finishBtn.classList.remove('download-ready');
+                finishBtn.classList.add('download-disabled');
+                finishBtn.disabled = true;
+            }
+        }
+        window.onload = function () {
+            updateTemplateOptions();
+            renderERPFields();
+            document.getElementById('product_count').onchange = function () {
+                updateTemplateOptions();
+                renderERPFields();
+            }
+            document.querySelector('input[name="page_title"]').oninput = checkRequired;
+            document.getElementById('template').onchange = checkRequired;
+            checkRequired();
+        }
+        async function validateProducts(action) {
+            if (action === 'validate') allowForceDownload = false;
+            const n = parseInt(document.getElementById('product_count').value || 1);
+            let codes = [];
+            for (let i = 1; i <= n; i++) {
+                let code = document.getElementById('code' + i).value.trim();
+                if (code) codes.push(code);
+            }
+            if (codes.length === 0) return true;
+            let res = await fetch("/validate_products", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ codes: codes })
+            });
+            let data = await res.json();
+            let missingWarnings = [];
+            data.forEach(p => {
+                if (!p.has_image) missingWarnings.push(`ERP Code <b>${p.code}</b>: <span style="color:#e66400;">Missing Product Image</span>`);
+                if (!p.has_desc) missingWarnings.push(`ERP Code <b>${p.code}</b>: <span style="color:#e66400;">Missing Description</span>`);
+            });
+            const warnBox = document.getElementById('warnBox');
+            if (missingWarnings.length) {
+                warnBox.innerHTML =
+                    '<strong>The following issues found:</strong><br>' +
+                    missingWarnings.join("<br>") +
+                    '<br><span style="color:#66BB66;"><strong>You can still download using the \'Finish & Download\' button.</strong></span>';
+                warnBox.style.background = '#ffefc9';
+                warnBox.style.border = '1.5px solid #ffa900';
+                warnBox.style.color = '#c06a00';
+                warnBox.style.display = "block";
+                window.scrollTo(0, document.body.scrollHeight);
+                return false;
+            } else {
+                warnBox.innerHTML = '<strong>✅ All products validated successfully!</strong>';
+                warnBox.style.background = '#e6ffe6';
+                warnBox.style.border = '1.5px solid #1faa00';
+                warnBox.style.color = '#207700';
+                warnBox.style.display = "block";
+                window.scrollTo(0, document.body.scrollHeight);
+                return true;
+            }
+        }
+        function forceSubmit(action) {
+            let f = document.getElementById('slideForm');
+            let h = document.createElement('input');
+            h.type = "hidden";
+            h.name = "action";
+            h.value = "force_" + action;
+            f.appendChild(h);
+            f.submit();
+        }
+    </script>
+</head>
+<body>
+<div class="container">
+    <h1>Add Product Slide</h1>
+    {% if total_slides %}
+        <p style="font-size:14px;color:#888;margin:2px 0 14px 0;">Slide {{ slide_index+1 }} of {{ total_slides }}</p>
+    {% endif %}
+    <form id="slideForm" method="post" autocomplete="off">
+        <label>Slide Title</label>
+        <input type="text" name="page_title" required value="{{ slide_data['page_title'] if slide_data else '' }}">
+
+        <label>Product Count</label>
+        <select name="product_count" id="product_count" required>
+            {% for i in range(1,8) %}
+                <option value="{{ i }}" {% if slide_data and slide_data['product_count'] == i %}selected{% endif %}>{{ i }}</option>
+            {% endfor %}
+        </select>
+
+        <div id="erp-fields" class="erp-fields"></div>
+
+        <div style="text-align:left; margin-top:15px; margin-bottom:7px;">
+            <span class="label-help-inline">
+                Select Layout Template
+                <button type="button" class="circle-help"
+                    onclick="window.open('{{ url_for('static', filename='template-info.pdf') }}', '_blank');"
+                    title="See all template layouts">
+                    <svg height="18" width="18">
+                        <circle cx="9" cy="9" r="8" stroke="#ff7300" stroke-width="2" fill="#fff"/>
+                        <text x="9" y="13" text-anchor="middle" font-size="12" fill="#ff7300" font-family="Arial" font-weight="bold">?</text>
+                    </svg>
+                </button>
+            </span>
+        </div>
+        <select name="template" id="template" required>
+            <!-- JS will fill -->
+        </select>
+
+        <div id="warnBox" class="warn" style="display:none"></div>
+        <div class="button-row">
+        <button type="button" onclick="window.location.href='{{ url_for('index') }}'" class="secondary">Reset</button>
+        <button type="submit" name="action" value="back" formnovalidate class="secondary">Back</button>
+        <button type="submit" name="action" value="add_more" id="addMoreBtn">Add Slide</button>
+        <button type="button" onclick="validateProducts('validate')" style="background-color:#d25a2f;color:#ffffff;">Validate</button>
+        <button type="submit" name="action" value="finish" id="finishBtn" class="download-disabled" disabled onclick="return validateProducts('finish');">Finish & Download</button>
+        </div>
+    </form>
+</div>
+</body>
+</html>

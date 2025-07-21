@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Error - Something Went Wrong</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0eded;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.603);
+            padding: 32px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.22);
+            width: 90%;
+            max-width: 800px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #cc0000;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        pre {
+            background: #f5f5f5;
+            color: #333;
+            padding: 15px;
+            border-radius: 8px;
+            max-height: 400px;
+            overflow: auto;
+            font-size: 0.9rem;
+            text-align: left;
+        }
+
+        button {
+            margin-top: 25px;
+            padding: 0.8em 1.5em;
+            background-color: #ca6411;
+            color: white;
+            font-size: 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #e66400;
+        }
+
+        form {
+            display: flex;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚨 An error occurred!</h1>
+        <p>Here’s the full error traceback for debugging:</p>
+        <pre>{{ error }}</pre>
+        <form method="get" action="{{ url_for('index') }}">
+            <button type="submit"> Reset and Start Over</button>
+        </form>
+    </div>
+</body>
+</html>
