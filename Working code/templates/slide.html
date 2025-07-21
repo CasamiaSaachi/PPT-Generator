@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Slide - Product Spec PPT</title>
+    <style>
+        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(to bottom right, #FFA500, #ffffff); display: flex; justify-content: center; align-items: center; min-height: 100vh;}
+        .container { background: white; padding: 30px 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); width: 440px; text-align: center;}
+        h2 { color: #ff7300; }
+        label { font-weight: bold; display: block; margin-top: 15px; margin-bottom: 5px; text-align: left;}
+        input[type="text"], select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box;}
+        button { width: 48%; padding: 12px; margin-top: 18px; font-size: 16px; border: none; border-radius: 8px; cursor: pointer; transition: background 0.2s, color 0.2s;}
+        .download-ready { background-color: #34b233 !important; color: #fff !important; }
+        .download-disabled { background-color: #ccc !important; color: #666 !important; cursor: not-allowed !important;}
+        button:not(.download-ready):not(.download-disabled) { background-color: #ff7300; color: white;}
+        .secondary { background: #c7c7c7; color: #333; margin-left: 2%;}
+        button:hover:not(.download-disabled):not(.secondary):not(.download-ready) { background-color: #e66400;}
+        button.download-ready:hover { background-color: #269d1c !important;}
+    </style>
+    <script>
+    const templates = {{ templates_per_count|tojson }};
+    function updateTemplateOptions() {
+        const count = document.getElementById('product_count').value;
+        const templateSel = document.getElementById('template');
+        templateSel.innerHTML = "";
+        if (templates[count]) {
+            for (let i = 1; i <= templates[count]; i++) {
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.text = `Template ${i}`;
+                templateSel.appendChild(opt);
+            }
+            // Pre-select template if editing slide
+            {% if slide_data %}
+                templateSel.value = "{{ slide_data['template'] }}";
+            {% endif %}
+        }
+    }
+    function showProductInputs() {
+        const n = parseInt(document.getElementById('product_count').value || 1);
+        for (let i = 1; i <= 7; i++) {
+            document.getElementById('code'+i).style.display = i <= n ? 'block':'none';
+            document.getElementById('code_label'+i).style.display = i <= n ? 'block':'none';
+        }
+        checkRequired();
+    }
+    function checkRequired() {
+        const n = parseInt(document.getElementById('product_count').value || 1);
+        let ready = true;
+        if (!document.querySelector('input[name="page_title"]').value.trim()) ready = false;
+        for (let i = 1; i <= n; i++) {
+            if (!document.getElementById('code'+i).value.trim()) ready = false;
+        }
+        if (!document.getElementById('template').value) ready = false;
+        const finishBtn = document.getElementById('finishBtn');
+        if (ready) {
+            finishBtn.classList.remove('download-disabled');
+            finishBtn.classList.add('download-ready');
+            finishBtn.disabled = false;
+        } else {
+            finishBtn.classList.remove('download-ready');
+            finishBtn.classList.add('download-disabled');
+            finishBtn.disabled = true;
+        }
+    }
+    window.onload = function() {
+        updateTemplateOptions();
+        showProductInputs();
+        document.getElementById('product_count').onchange = function() {
+            updateTemplateOptions();
+            showProductInputs();
+        }
+        document.querySelector('input[name="page_title"]').oninput = checkRequired;
+        document.getElementById('template').onchange = checkRequired;
+        for (let i = 1; i <= 7; i++) {
+            document.getElementById('code'+i).oninput = checkRequired;
+        }
+        checkRequired();
+    }
+    </script>
+</head>
+<body>
+<div class="container">
+    <h2>Add Product Slide</h2>
+    <!-- <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+    <button type="button" onclick="window.location.href='{{ url_for('index') }}'" style="background: #FFA500; color: #fff; border: none; border-radius: 8px; padding: 8px 18px; font-size:15px; cursor: pointer;">
+        Refresh / Start Over
+    </button>
+    <button type="button" onclick="window.location.href='{{ url_for('index') }}'" style="background: #c7c7c7; color: #333; border: none; border-radius: 8px; padding: 8px 18px; font-size:15px; cursor: pointer;">
+        Back to Details
+    </button>
+    </div> -->
+    {% if total_slides %}
+    <p style="font-size:14px;color:#888;margin:2px 0 14px 0;">Slide {{ slide_index+1 }} of {{ total_slides }}</p>
+    {% endif %}
+    
+
+    <form method="post">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+            <button type="button"
+                onclick="window.location.href='{{ url_for('index') }}'"
+                style="background: #FFA500; color: #fff; border: none; border-radius: 8px; padding: 8px 18px; font-size:15px; cursor: pointer;">
+                Refresh / Start Over
+            </button>
+            <button type="submit"
+                name="action"
+                value="back"
+                formnovalidate
+                style="background: #c7c7c7; color: #333; border: none; border-radius: 8px; padding: 8px 18px; font-size:15px; cursor: pointer;">
+                Back
+            </button>
+        </div>
+
+        <label>Slide Title</label>
+        <!-- <input type="text" name="page_title" required> -->
+        <input type="text" name="page_title" required value="{{ slide_data['page_title'] if slide_data else '' }}">
+        <label>Product Count</label>
+        <select name="product_count" id="product_count" required>
+            {% for i in range(1,8) %}
+            <!-- <option value="{{i}}">{{i}}</option> -->
+            <option value="{{i}}" {% if slide_data and slide_data['product_count'] == i %}selected{% endif %}>{{i}}</option>
+            {% endfor %}
+                        
+        </select>
+        {% for i in range(1,8) %}
+            <label id="code_label{{i}}">ERP Code #{{i}}</label>
+            <!-- <input type="text" name="code{{i}}" id="code{{i}}"> -->
+            <input type="text" name="code{{i}}" id="code{{i}}" value="{% if slide_data and i <= slide_data['product_count'] %}{{ slide_data['codes'][i-1] if i-1 < slide_data['codes']|length else '' }}{% endif %}">
+        {% endfor %}
+        <label>Select Layout Template</label>
+        <select name="template" id="template" required>
+            <!-- Options are filled dynamically -->
+        </select>
+        <div style="margin-top:18px;">
+            <button type="submit" name="action" value="add_more" class="secondary">Add Another Slide</button>
+            <button type="submit" name="action" value="finish" id="finishBtn" class="download-disabled" disabled>Finish & Download</button>
+        </div>
+    </form>
+</div>
+</body>
+</html>

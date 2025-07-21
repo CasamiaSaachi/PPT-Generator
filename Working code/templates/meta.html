@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Product Spec PPT - Step 1</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to bottom right, #FFA500, #ffffff);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container { background: white; padding: 30px 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); width: 400px; text-align: center;}
+        .logo-heading { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 4px;}
+        .logo-heading img { height: 80px;}
+        h1 { color: #ff7300; font-size: 24px;}
+        label { font-weight: bold; display: block; margin-top: 5px; margin-bottom: 15px; text-align: left;}
+        input[type="text"] { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box;}
+        button { width: 100%; padding: 12px; margin-top: 25px; background-color: #ff7300; color: white; font-size: 16px; border: none; border-radius: 8px; cursor: pointer;}
+        button:hover { background-color: #e66400;}
+
+        
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="logo-heading">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo">
+    </div>
+    <h1>Start Your Presentation</h1>
+    <form method="post">
+        <label>Main Title</label>
+        <input type="text" name="main_title" value="PROPOSED SELECTIONS" required>
+        <label>Subtitle</label>
+        <input type="text" name="subtitle" value="SANITARYWARE |" required>
+        <label>Date</label>
+        <input type="text" name="date" placeholder="Leave blank for today (auto)" >
+        <label>Project Name</label>
+        <input type="text" name="project" required>
+        <button type="submit">Next: Add Product Slides</button>
+    </form>
+</div>
+</body>
+</html>
